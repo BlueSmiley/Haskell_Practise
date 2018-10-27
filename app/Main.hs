@@ -1,6 +1,7 @@
 module Main where
 
 import Lib
+import System.Random
 
 main :: IO ()
 main = someFunc
@@ -143,4 +144,25 @@ myRemove :: [a] -> Int -> (a,[a])
 myRemove (x:xs) 1 = (x,xs)
 myRemove (x:xs) d = let (y,ys) = myRemove xs (d-1) in
         (y,x:ys)
+
+myInsert :: [a] -> a -> Int -> [a]
+myInsert xs a 1 = a:xs
+myInsert (x:xs) a d = x:myInsert xs a (d-1)  
+
+myRange :: (Ord a,Eq a,Enum a) => a -> a -> [a]
+myRange a b = if a == b then [a] else a: myRange (succ a) b
+
+myRandom = random (mkStdGen 100) :: (Int, StdGen)
+
+myRandomExtract :: [a] -> Int -> StdGen-> IO [a]
+myRandomExtract x 0 _ = return []
+myRandomExtract x d gen =  let (a,b) = randomR (1,length x) (gen) in
+    do
+        c <- myRandomExtract x (d-1) b 
+        return ((x !! (a-1)):c)
+
+myRndSelect :: [a] -> Int -> IO [a]
+myRndSelect x d = do
+    gen <- getStdGen
+    myRandomExtract x d gen
 

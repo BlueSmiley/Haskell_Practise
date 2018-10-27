@@ -35,6 +35,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - n99-haskell
+    - random
 
 tests:
   n99-haskell-test:
