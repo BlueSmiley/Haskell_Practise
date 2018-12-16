@@ -2,10 +2,12 @@ module Main where
 
 import Lib
 import System.Random
+import Data.List
 
 main :: IO ()
 main = someFunc
 
+-- I was experimenting a lot of things as practise hence why it doesn't look neat
 lastMy :: [a] -> Maybe a
 lastMy x = case x of
     [] -> Nothing
@@ -154,7 +156,7 @@ myRange a b = if a == b then [a] else a: myRange (succ a) b
 
 myRandom = random (mkStdGen 100) :: (Int, StdGen)
 
-myRandomExtract :: [a] -> Int -> StdGen-> IO [a]
+myRandomExtract :: [a] -> Int -> StdGen -> IO [a]
 myRandomExtract x 0 _ = return []
 myRandomExtract x d gen =  let (a,b) = randomR (1,length x) (gen) in
     do
@@ -165,4 +167,70 @@ myRndSelect :: [a] -> Int -> IO [a]
 myRndSelect x d = do
     gen <- getStdGen
     myRandomExtract x d gen
+
+rndRange :: Int -> Int -> IO [Int]
+rndRange options upperbound = do
+    gen <- getStdGen
+    rndRange' options upperbound gen
+    where 
+        rndRange' :: Int -> Int -> StdGen -> IO [Int]
+        rndRange' 0 _ _ = return []
+        rndRange' options upperbound gen = do
+            let (val,seed') = randomR (0,upperbound) gen 
+            remList <- rndRange' (options-1) upperbound seed'
+            return (val:remList)
+
+rndPermu :: [a] -> IO [a] 
+rndPermu [] = return []
+rndPermu list = do
+    [index] <- rndRange 1 (length list - 1)
+    let (l1, elem:l2) = splitAt index list
+        remlist = l1 ++ l2
+    ans <- rndPermu remlist
+    return (elem:ans)
+
+slices :: Int -> [a] -> (a,[a])
+slices index xs = 
+    let (init,elem:tail) = splitAt index xs in
+        (elem, init++tail)
+            
+combinations :: (Eq a) => Int -> [a] -> [[a]]
+combinations 0 _ = []
+combinations 1 choices = nub$
+    do
+        a <- choices
+        return [a]
+combinations slots choices = do
+    index <- [0..(length choices-1)]
+    let (elem, ys) = slices index choices
+        combs = combinations (slots-1) ys
+    case elemIndex elem ys of
+        Nothing -> map (elem:) combs
+        Just otherIndex  
+            |index <= otherIndex -> map (elem:) combs
+            |otherwise -> fail "repeated element"
+
+--skip to arithmetic
+isPrime n = isPrime' n [2..n]
+    where 
+        isPrime' _ [_] = True
+        isPrime' n (x:xs)
+            | n `rem` x == 0 = False
+            | x*x > n = True 
+            | otherwise = isPrime' n (filter (\y -> y `rem` x /= 0) xs)
+
+mygcd divident divisor
+    | divisor == 0 = divident
+    | otherwise = mygcd divisor (divident `mod` divisor)
+
+coprime m n 
+    | d == 1 = True
+    | otherwise = False
+    where d = mygcd m n
+
+totient 1 = [1]
+totient n = filter (coprime n) [1..n]
+
+
+    
 
